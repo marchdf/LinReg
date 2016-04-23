@@ -1,0 +1,91 @@
+---
+title: "Effect of Vitamin C dose and delivery method on guinea pig tooth growth"
+author: "Marc T. Henry de Frahan"
+output:
+  pdf_document:
+    fig_width: 3.5
+    fig_height: 3
+    number_sections: true
+    fig_caption: true
+---
+
+# Executive summary
+
+In this report, we analyze the relationship between tranmission type
+(automatic vs manual) and miles per gallon (outcome). Through linear
+regression models we find that: 
+
+1. 
+2. 
+
+# Exploratory Data Analysis
+
+Let's first load the data and format the information we want from the
+mtcars data set. We can plot the data using a violin plot to get an
+idea of the differences between the transmission types. A first glance
+at the data seems to indicate that the automatic transmission leads to
+fewer miles per gallon. On the other hand, using a manual transmission
+seems to lead to a better outcome though the spread is more. We will
+perform linear regression to explore quantitatively the relationship
+between transmission type and MPG.
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+df <- mtcars[c("mpg","am")]
+df <- df %>%
+    mutate(transmission = ifelse(am==0,"automatic","manual")) %>%
+    mutate(am = as.factor(am)) %>%
+    mutate(transmission = as.factor(transmission))
+str(df)
+```
+
+```{r echo = FALSE, fig.cap="MPG vs transmission"}
+ggplot(data=df, aes(x=transmission,y=mpg)) +
+    geom_violin(aes(fill=transmission)) + 
+    labs(x = "Transmission type",
+         y="Miles per gallon (MPG)",
+         title="Miles per gallon vs transmission type");
+```
+
+
+
+# Regression models
+
+Let's perform the regression model to explore the relationship between
+mpg and transmission type.
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+fit <- lm(mpg ~ transmission, data = df)
+summary(fit)
+```
+
+Since we are looking at categorical data, the output coefficients
+should be interpreted as intercepts. For automatic transmission the
+intercept is `r fit$coef[1]`. For the manual transmission the
+intercept is `r fit$coef[1]+fit$coef[2]` (the sum of the automatic
+transmission intercept and the manual transmission coefficient). The
+manual transmission coefficient indicates the change with respect to
+the automatic transmission intercept. In this case it is positive,
+which means that the intercept for manual transmission is greater than
+the one for the automatic transmission. The difference is also
+statistically significant since the p-value associated to this
+coefficient (`r summary(fit)$coeff[2,4]`) is less than 0.05. This
+implies that we can safely reject the null hypothesis, which is that
+the means of the different transmission types are equal.
+
+
+
+# Conclusions 
+Under our assumptions, we can answer both our questions:
+
+1. Increasing the dose of vitamin C increases the tooth growth.
+2. The delivery method for vitamin C does not affect tooth growth.
+
+
+\newpage
+
+# Appendix
+The version history of this document can be found at the [GitHub repository page](https://github.com/marchdf/LinReg). Here is the full code used in this document.
+
+```{r code=readLines(knitr::purl('./linreg_cars.Rmd', documentation = 1)), eval = FALSE}
+```
