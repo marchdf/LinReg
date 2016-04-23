@@ -23,7 +23,7 @@ model with weight and transmission, we see that the transmission type
 does not have a significant effect on the mpg.
 
 
-# Exploratory Data Analysis
+# Exploratory data analysis
 
 Let's first load the data and format the information we want from the
 mtcars data set. We can plot the data using a violin plot to get an
@@ -41,18 +41,7 @@ df <- mtcars %>%
     mutate(transmission = ifelse(am==0,"automatic","manual")) %>%
     mutate(am = as.factor(am)) %>%
     mutate(transmission = as.factor(transmission))
-str(df)
 ```
-
-```{r echo = FALSE, fig.cap="MPG vs transmission"}
-ggplot(data=df, aes(x=transmission,y=mpg)) +
-    geom_violin(aes(fill=transmission)) + 
-    labs(x = "Transmission type",
-         y="Miles per gallon (MPG)",
-         title="Miles per gallon vs transmission type");
-```
-
-
 
 # Regression models
 
@@ -61,9 +50,11 @@ Let's perform the regression model to explore the relationship between
 mpg and transmission type.
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
 fit <- lm(mpg ~ transmission, data = df)
-summary(fit)
+b <- round(dfbetas(fit)[,2],3)
+h <- round(hatvalues(fit),3)
 ```
 
+### Model interpretation
 Since we are looking at categorical data, the output coefficients
 should be interpreted as intercepts. For automatic transmission the
 intercept is `r fit$coef[1]`. For the manual transmission the
@@ -83,70 +74,23 @@ The implications of this model are that manual transmission is better
 for MPG by about `r fit$coef[2]` MPG and this difference is
 statistically significant.
 
-## Residual and diagnostics
+### Residual and diagnostics
 
-It is important to look at the residuals and other diagnostics to
-ensure that the model is ok. In the residual plot figure, we show that
-the residual does not follow any clear pattern, indicating that we are
-not missing a non-linearity in the model. In the residual diagnostics
-figures, we can see that the residuals closely follow a normal
-distribution. We can also see in the residual diagnostic figures that
-none of the data points have too much influence on the model. This can
-also be seen by looking at the dfbetas and hatvalues and noticing that
-none of the points are significantly different from each other. We
-conclude that the residual diagnostics do not invalidate our model.
+It is important to look at the residuals and other diagnostics to ensure that the model is ok. In the residual plot figure, we show that the residual does not follow any clear pattern, indicating that we are not missing a non-linearity in the model. In the residual diagnostics figures, we can see that the residuals closely follow a normal distribution. We can also see in the residual diagnostic figures that none of the data points have too much influence on the model. This can also be seen by looking at the dfbetas (max= $`r max(b)`$, min = $`r min(b)`$, and std = $`r sd(b)`$ ) and hatvalues (max= $`r max(h)`$, min = $`r min(h)`$, and std = $`r sd(h)`$ ) and noticing that none of the points are significantly different from each other. We conclude that the residual diagnostics do not invalidate our model.
 
-
-```{r echo = FALSE, fig.cap="Residual"}
-df <- df %>%
-    mutate(residual = resid(fit))
-ggplot(data=df, aes(x=transmission,y=residual)) +
-    geom_violin(aes(fill=transmission)) + 
-    labs(x = "Transmission type",
-         y="Residual",
-         title="Residual plot");
-```
-
-
-```{r echo = FALSE, fig.cap="Residual diagnostics"}
-## round(dfbetas(fit)[,2],3)
-## round(hatvalues(fit),3)
-## par(mfrow=c(2,2))
-## plot(fit)
-```
 
 ## Confounding with the weight of the car
 
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
 fit.wt <- lm(wt ~ transmission, data = df)
-summary(fit.wt)
 ```
-
-```{r echo = FALSE, fig.cap="Weight vs transmission"}
-ggplot(data=df, aes(x=transmission,y=wt)) +
-    geom_violin(aes(fill=transmission)) + 
-    labs(x = "Transmission type",
-         y = "Weight",
-         title="Miles per gallon vs transmission type");
-```
-
-Let's take into account one more variable, the weight of the car. We
-can see in the figure of weight versus transmission type that
-automatic cars tend to be heavier. A linear model of weight (outcome)
-on transmission type indicates that this is indeed the case. A manual
-car is predicted to be `r summary(fit.wt)$coeff[2,1]` lighter than a
-manual car. The difference is statistically significant (p-value = $`r summary(fit.wt)$coeff[2,4]`$ < 0.05). This implies that we should also
-look at the weight of the car as a predicting variable.
+Let's take into account one more variable, the weight of the car. We can see in the figure of weight versus transmission type that automatic cars tend to be heavier. A linear model of weight (outcome) on transmission type indicates that this is indeed the case. A manual car is predicted to be `r summary(fit.wt)$coeff[2,1]` lighter than a manual car. The difference is statistically significant (p-value = $`r summary(fit.wt)$coeff[2,4]`$ < 0.05). This implies that we should also look at the weight of the car as a predicting variable.
 
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
 fit.wt.am <- lm(mpg ~ transmission+wt, data = df)
-summary(fit.wt.am)
 ```
 
-This model confounding with the weight and transmission type indicates
-that there is a linear relationship of mpg on the weight (slope = `r
-summary(fit.wt.am)$coeff[3,1]`) and the transmission type does not
-have significant impact on the intercept (p-value = $`r summary(fit.wt.am)$coeff[2,4]`$ > 0.05).
+This model confounding with the weight and transmission type indicates that there is a linear relationship of mpg on the weight (slope = $`r summary(fit.wt.am)$coeff[3,1]`$ ) and the transmission type does not have significant impact on the intercept (p-value = $`r summary(fit.wt.am)$coeff[2,4]`$ > 0.05).
 
 
 # Conclusions 
@@ -162,6 +106,40 @@ the mpg.
 \newpage
 
 # Appendix
+Here are the figures used in this document:
+
+```{r echo = FALSE, fig.cap="MPG vs transmission type"}
+ggplot(data=df, aes(x=transmission,y=mpg)) +
+    geom_violin(aes(fill=transmission)) + 
+    labs(x = "Transmission type",
+         y="Miles per gallon (MPG)",
+         title="Miles per gallon vs transmission");
+```
+
+```{r echo = FALSE, fig.cap="Residual plot"}
+df <- df %>%
+    mutate(residual = resid(fit))
+ggplot(data=df, aes(x=transmission,y=residual)) +
+    geom_violin(aes(fill=transmission)) + 
+    labs(x = "Transmission type",
+         y="Residual",
+         title="Residual plot");
+```
+
+```{r echo = FALSE, fig.cap="Residual diagnostics"}
+par(mfrow=c(1,1))
+plot(fit)
+```
+
+```{r echo = FALSE, fig.cap="Weight vs transmission"}
+ggplot(data=df, aes(x=transmission,y=wt)) +
+    geom_violin(aes(fill=transmission)) + 
+    labs(x = "Transmission type",
+         y = "Weight",
+         title="Weight vs transmission type");
+```
+
+
 The version history of this document can be found at the [GitHub repository page](https://github.com/marchdf/LinReg). Here is the full code used in this document.
 
 ```{r code=readLines(knitr::purl('./linreg_cars.Rmd', documentation = 1)), eval = FALSE}
