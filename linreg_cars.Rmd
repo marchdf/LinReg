@@ -11,11 +11,11 @@ output:
 
 # Executive summary
 
-In this report, we analyze the relationship between tranmission type
+In this report, we analyze the relationship between transmission type
 (automatic vs manual) and miles per gallon (outcome). Through a simple regression modeling looking just at transmission type, we find that: 
 
 1. manual transmission is better for MPG;
-2. manual transmission is about `r fit$coef[2]` MPG better and this difference is statistically significant (p-value = `r summary(fit)$coeff[2,4]` < 0.05).
+2. manual transmission is about 7 MPG better and this difference is statistically significant (p-value < 0.05).
 
 However, we also saw that there is a relationship between the
 transmission type and the weight of the car. When confounding the
@@ -74,7 +74,7 @@ the automatic transmission intercept. In this case it is positive,
 which means that the intercept for manual transmission is greater than
 the one for the automatic transmission. The difference is also
 statistically significant since the p-value associated to this
-coefficient (`r summary(fit)$coeff[2,4]`) is less than 0.05. This
+coefficient ($`r summary(fit) $coeff[2,4]`$) is less than 0.05. This
 implies that we can safely reject the null hypothesis, which is that
 the means of the different transmission types are equal.
 
@@ -104,15 +104,15 @@ ggplot(data=df, aes(x=transmission,y=residual)) +
     geom_violin(aes(fill=transmission)) + 
     labs(x = "Transmission type",
          y="Residual",
-         title="Residulal plot");
+         title="Residual plot");
 ```
 
 
 ```{r echo = FALSE, fig.cap="Residual diagnostics"}
-round(dfbetas(fit)[,2],3)
-round(hatvalues(fit),3)
-par(mfrow=c(2,2))
-plot(fit)
+## round(dfbetas(fit)[,2],3)
+## round(hatvalues(fit),3)
+## par(mfrow=c(2,2))
+## plot(fit)
 ```
 
 ## Confounding with the weight of the car
@@ -135,8 +135,7 @@ can see in the figure of weight versus transmission type that
 automatic cars tend to be heavier. A linear model of weight (outcome)
 on transmission type indicates that this is indeed the case. A manual
 car is predicted to be `r summary(fit.wt)$coeff[2,1]` lighter than a
-manual car. The difference is statistically significant (p-value = `r
-summary(fit.wt)$coeff[2,4]` < 0.05). This implies that we should also
+manual car. The difference is statistically significant (p-value = $`r summary(fit.wt)$coeff[2,4]`$ < 0.05). This implies that we should also
 look at the weight of the car as a predicting variable.
 
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
@@ -147,15 +146,14 @@ summary(fit.wt.am)
 This model confounding with the weight and transmission type indicates
 that there is a linear relationship of mpg on the weight (slope = `r
 summary(fit.wt.am)$coeff[3,1]`) and the transmission type does not
-have significant impact on the intercept (p-value = `r
-summary(fit.wt.am)$coeff[2,4]` > 0.05). 
+have significant impact on the intercept (p-value = $`r summary(fit.wt.am)$coeff[2,4]`$ > 0.05).
 
 
 # Conclusions 
 For a simple linear model accounting only for transmission type , we can answer both our questions that explore the simple relationship between transmission type and mpg
 
 1. The implications of our simple model are that manual transmission is better for MPG.
-2. Manual transmission is about `r fit$coef[2]` MPG better and this difference is statistically significant (p-value = `r summary(fit)$coeff[2,4]` < 0.05).
+2. Manual transmission is about `r fit$coef[2]` MPG better and this difference is statistically significant (p-value = $`r summary(fit)$coeff[2,4]`$ < 0.05).
 
 However, when confounding the model with weight and transmission, we
 see that the transmission type does not have a significant effect on
