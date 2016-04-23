@@ -1,5 +1,5 @@
 ---
-title: "Effect of Vitamin C dose and delivery method on guinea pig tooth growth"
+title: "Effect of transmission type on MPG in cars"
 author: "Marc T. Henry de Frahan"
 output:
   pdf_document:
@@ -12,11 +12,16 @@ output:
 # Executive summary
 
 In this report, we analyze the relationship between tranmission type
-(automatic vs manual) and miles per gallon (outcome). Through linear
-regression models we find that: 
+(automatic vs manual) and miles per gallon (outcome). Through a simple regression modeling looking just at transmission type, we find that: 
 
-1. 
-2. 
+1. manual transmission is better for MPG;
+2. manual transmission is about `r fit$coef[2]` MPG better and this difference is statistically significant (p-value = `r summary(fit)$coeff[2,4]` < 0.05).
+
+However, we also saw that there is a relationship between the
+transmission type and the weight of the car. When confounding the
+model with weight and transmission, we see that the transmission type
+does not have a significant effect on the mpg.
+
 
 # Exploratory Data Analysis
 
@@ -32,8 +37,7 @@ between transmission type and MPG.
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 library(ggplot2)
-df <- mtcars[c("mpg","am")]
-df <- df %>%
+df <- mtcars %>%
     mutate(transmission = ifelse(am==0,"automatic","manual")) %>%
     mutate(am = as.factor(am)) %>%
     mutate(transmission = as.factor(transmission))
@@ -52,6 +56,7 @@ ggplot(data=df, aes(x=transmission,y=mpg)) +
 
 # Regression models
 
+## Simple linear regression model based on transmission
 Let's perform the regression model to explore the relationship between
 mpg and transmission type.
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
@@ -74,13 +79,87 @@ implies that we can safely reject the null hypothesis, which is that
 the means of the different transmission types are equal.
 
 
+The implications of this model are that manual transmission is better
+for MPG by about `r fit$coef[2]` MPG and this difference is
+statistically significant.
+
+## Residual and diagnostics
+
+It is important to look at the residuals and other diagnostics to
+ensure that the model is ok. In the residual plot figure, we show that
+the residual does not follow any clear pattern, indicating that we are
+not missing a non-linearity in the model. In the residual diagnostics
+figures, we can see that the residuals closely follow a normal
+distribution. We can also see in the residual diagnostic figures that
+none of the data points have too much influence on the model. This can
+also be seen by looking at the dfbetas and hatvalues and noticing that
+none of the points are significantly different from each other. We
+conclude that the residual diagnostics do not invalidate our model.
+
+
+```{r echo = FALSE, fig.cap="Residual"}
+df <- df %>%
+    mutate(residual = resid(fit))
+ggplot(data=df, aes(x=transmission,y=residual)) +
+    geom_violin(aes(fill=transmission)) + 
+    labs(x = "Transmission type",
+         y="Residual",
+         title="Residulal plot");
+```
+
+
+```{r echo = FALSE, fig.cap="Residual diagnostics"}
+round(dfbetas(fit)[,2],3)
+round(hatvalues(fit),3)
+par(mfrow=c(2,2))
+plot(fit)
+```
+
+## Confounding with the weight of the car
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+fit.wt <- lm(wt ~ transmission, data = df)
+summary(fit.wt)
+```
+
+```{r echo = FALSE, fig.cap="Weight vs transmission"}
+ggplot(data=df, aes(x=transmission,y=wt)) +
+    geom_violin(aes(fill=transmission)) + 
+    labs(x = "Transmission type",
+         y = "Weight",
+         title="Miles per gallon vs transmission type");
+```
+
+Let's take into account one more variable, the weight of the car. We
+can see in the figure of weight versus transmission type that
+automatic cars tend to be heavier. A linear model of weight (outcome)
+on transmission type indicates that this is indeed the case. A manual
+car is predicted to be `r summary(fit.wt)$coeff[2,1]` lighter than a
+manual car. The difference is statistically significant (p-value = `r
+summary(fit.wt)$coeff[2,4]` < 0.05). This implies that we should also
+look at the weight of the car as a predicting variable.
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+fit.wt.am <- lm(mpg ~ transmission+wt, data = df)
+summary(fit.wt.am)
+```
+
+This model confounding with the weight and transmission type indicates
+that there is a linear relationship of mpg on the weight (slope = `r
+summary(fit.wt.am)$coeff[3,1]`) and the transmission type does not
+have significant impact on the intercept (p-value = `r
+summary(fit.wt.am)$coeff[2,4]` > 0.05). 
+
 
 # Conclusions 
-Under our assumptions, we can answer both our questions:
+For a simple linear model accounting only for transmission type , we can answer both our questions that explore the simple relationship between transmission type and mpg
 
-1. Increasing the dose of vitamin C increases the tooth growth.
-2. The delivery method for vitamin C does not affect tooth growth.
+1. The implications of our simple model are that manual transmission is better for MPG.
+2. Manual transmission is about `r fit$coef[2]` MPG better and this difference is statistically significant (p-value = `r summary(fit)$coeff[2,4]` < 0.05).
 
+However, when confounding the model with weight and transmission, we
+see that the transmission type does not have a significant effect on
+the mpg.
 
 \newpage
 
